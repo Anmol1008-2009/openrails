@@ -17,9 +17,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Diagnostics;
+#if WINDOWS || NET6_0_WINDOWS
 using Microsoft.Win32;
+#endif
 using System.IO;
 
 namespace MSTS
@@ -37,27 +40,30 @@ namespace MSTS
         /// <summary>
         /// Returns the base path of the MSTS installation
         /// </summary>
-        /// <returns>no trailing \</returns>
+        /// <returns>no trailing directory separator</returns>
         public static string Base()
         /* Throws
          *		System.Exception( "Can't find MSTS" );
          */
         {
 
+#if WINDOWS || NET6_0_WINDOWS
 			if (DefaultLocation == null)
 			{
 				DefaultLocation = "c:\\program files\\microsoft games\\train simulator";
 
-				RegistryKey RK = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Microsoft Games\Train Simulator\1.0");
-				if (RK == null)
-					RK = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Wow6432Node\Microsoft\Microsoft Games\Train Simulator\1.0");
-				if (RK != null)
-					DefaultLocation = (string)RK.GetValue("Path", DefaultLocation);
-
-				// Verify installation at this location
-				if (!Directory.Exists(DefaultLocation))
-					throw new FileNotFoundException("MSTS directory '" + DefaultLocation + "' does not exist.", DefaultLocation);
+				using (RegistryKey RK = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Microsoft Games\Train Simulator\1.0")
+					?? Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Wow6432Node\Microsoft\Microsoft Games\Train Simulator\1.0"))
+					if (RK != null)
+						DefaultLocation = (string)RK.GetValue("Path", DefaultLocation);
 			}
+#endif
+
+            if (DefaultLocation == null)
+                throw new InvalidOperationException("MSTSPath.DefaultLocation must be set to the MSTS installation directory on this platform.");
+
+            if (!Directory.Exists(DefaultLocation))
+                throw new FileNotFoundException("MSTS directory '" + DefaultLocation + "' does not exist.", DefaultLocation);
 
             return DefaultLocation;
         }  //
@@ -70,37 +76,76 @@ namespace MSTS
         /// <returns></returns>
         public static string RouteFolder(string route)
         {
-            return Base() + "\\ROUTES\\" + route;
+            return ResolvePath(Path.Combine(Base(), "ROUTES", NormalizePath(route)));
         }
 
         public static string ConsistFolder()
         {
-            return Base() + "\\TRAINS\\CONSISTS";
+            return ResolvePath(Path.Combine(Base(), "TRAINS", "CONSISTS"));
         }
 
         public static string TrainsetFolder()
         {
-            return Base() + "\\TRAINS\\TRAINSET";
+            return ResolvePath(Path.Combine(Base(), "TRAINS", "TRAINSET"));
         }
 
         public static string GlobalSoundFolder()
         {
-            return Base() + "\\SOUND";
+            return ResolvePath(Path.Combine(Base(), "SOUND"));
         }
 
         public static string GetActivityFolder(string routeFolderName)
         {
-            return RouteFolder(routeFolderName) + "\\ACTIVITIES";
+            return ResolvePath(Path.Combine(RouteFolder(routeFolderName), "ACTIVITIES"));
         }
 
         public static string GetTRKFileName(string routeFolderPath)
         {
+            routeFolderPath = ResolvePath(routeFolderPath);
             if (!Directory.Exists(routeFolderPath))
                 throw new DirectoryNotFoundException(routeFolderPath);
-            var trkFileNames = Directory.GetFiles(routeFolderPath, "*.trk");
-            if (trkFileNames.Length == 0)
+            var trkFileName = Directory.EnumerateFiles(routeFolderPath)
+                .FirstOrDefault(file => Path.GetExtension(file).Equals(".trk", StringComparison.OrdinalIgnoreCase));
+            if (trkFileName == null)
                 throw new FileNotFoundException("TRK file not found in '" + routeFolderPath + "'.", Path.Combine(routeFolderPath, Path.GetFileName(routeFolderPath)));
-            return trkFileNames[0];
+            return trkFileName;
+        }
+
+        /// <summary>
+        /// Resolves an MSTS path using case-insensitive lookup on case-sensitive filesystems.
+        /// </summary>
+        public static string ResolvePath(string path)
+        {
+            string fullPath = Path.GetFullPath(NormalizePath(path));
+            string currentPath = Path.GetPathRoot(fullPath) ?? string.Empty;
+            if (string.IsNullOrEmpty(currentPath))
+                return fullPath;
+
+            var pathParts = fullPath[currentPath.Length..].Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 0; i < pathParts.Length; i++)
+            {
+                string candidate = Path.Combine(currentPath, pathParts[i]);
+                if (File.Exists(candidate) || Directory.Exists(candidate))
+                {
+                    currentPath = candidate;
+                    continue;
+                }
+
+                if (Directory.Exists(currentPath))
+                {
+                    string actualName = Directory.EnumerateFileSystemEntries(currentPath)
+                        .FirstOrDefault(entry => Path.GetFileName(entry).Equals(pathParts[i], StringComparison.OrdinalIgnoreCase));
+                    if (actualName != null)
+                    {
+                        currentPath = actualName;
+                        continue;
+                    }
+                }
+
+                return Path.Combine(currentPath, Path.Combine(pathParts[i..]));
+            }
+
+            return currentPath;
         }
 
         /// <summary>
@@ -111,10 +156,11 @@ namespace MSTS
         /// <returns></returns>
         public static string TrainSoundPath(string wagfilename, string soundfile)
         {
-            string trainsetSoundPath = Path.GetDirectoryName(wagfilename) + @"\SOUND\" + soundfile;
-            string globalSoundPath = MSTSPath.GlobalSoundFolder() + @"\" + soundfile;
+            string trainsetSoundPath = Path.Combine(Path.GetDirectoryName(wagfilename), "SOUND", NormalizePath(soundfile));
+            string globalSoundPath = Path.Combine(MSTSPath.GlobalSoundFolder(), NormalizePath(soundfile));
 
-            return File.Exists(trainsetSoundPath) ? trainsetSoundPath : globalSoundPath;
+            trainsetSoundPath = ResolvePath(trainsetSoundPath);
+            return File.Exists(trainsetSoundPath) ? trainsetSoundPath : ResolvePath(globalSoundPath);
         }
 
 
@@ -123,45 +169,52 @@ namespace MSTS
         /// </summary>
         public static string SMSSoundPath(string smsfilename, string soundfile)
         {
-            string smsSoundPath = Path.GetDirectoryName(smsfilename) + @"\" + soundfile;
-            string globalSoundPath = MSTSPath.GlobalSoundFolder() + @"\" + soundfile;
+            string smsSoundPath = Path.Combine(Path.GetDirectoryName(smsfilename), NormalizePath(soundfile));
+            string globalSoundPath = Path.Combine(MSTSPath.GlobalSoundFolder(), NormalizePath(soundfile));
 
-            return File.Exists(smsSoundPath) ? smsSoundPath : globalSoundPath;
+            smsSoundPath = ResolvePath(smsSoundPath);
+            return File.Exists(smsSoundPath) ? smsSoundPath : ResolvePath(globalSoundPath);
         }
 
         public static string TITFilePath(string route)
         {
-            return RouteFolder(route) + "\\" + route + ".TIT";
+            string normalizedRoute = NormalizePath(route);
+            return ResolvePath(Path.Combine(RouteFolder(route), normalizedRoute + ".TIT"));
         }
 
         public static string GetConPath(string conName)
         {
-            return Base() + @"\TRAINS\CONSISTS\" + conName + ".con";
+            return ResolvePath(Path.Combine(ConsistFolder(), NormalizePath(conName) + ".con"));
         }
 
         public static string GetSrvPath(string srvName, string routeFolderPath)
         {
-            return routeFolderPath + @"\SERVICES\" + srvName + ".srv";
+            return ResolvePath(Path.Combine(routeFolderPath, "SERVICES", NormalizePath(srvName) + ".srv"));
         }
 
         public static string GetTrfPath(string trfName, string routeFolderPath)
         {
-            return routeFolderPath + @"\TRAFFIC\" + trfName + ".trf";
+            return ResolvePath(Path.Combine(routeFolderPath, "TRAFFIC", NormalizePath(trfName) + ".trf"));
         }
 
         public static string GetPatPath(string patName, string routeFolderPath)
         {
-            return routeFolderPath + @"\PATHS\" + patName + ".pat";
+            return ResolvePath(Path.Combine(routeFolderPath, "PATHS", NormalizePath(patName) + ".pat"));
         }
 
         public static string GetWagPath(string name, string folder)
         {
-            return Base() + @"\TRAINS\TRAINSET\" + folder + @"\" + name + ".wag";
+            return ResolvePath(Path.Combine(TrainsetFolder(), NormalizePath(folder), NormalizePath(name) + ".wag"));
         }
 
         public static string GetEngPath(string name, string folder)
         {
-            return Base() + @"\TRAINS\TRAINSET\" + folder + @"\" + name + ".eng";
+            return ResolvePath(Path.Combine(TrainsetFolder(), NormalizePath(folder), NormalizePath(name) + ".eng"));
+        }
+
+        static string NormalizePath(string path)
+        {
+            return path.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
         }
 
     } // class MSTSPath

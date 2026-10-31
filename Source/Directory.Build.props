@@ -5,7 +5,9 @@
     <OutputPath>$(MSBuildThisFileDirectory)\..\Program\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <IntermediateOutputPath Condition="'$(TargetFramework)' != '' and '$(Configuration)' == ''">$(MSBuildProjectDirectory)/obj/Debug/$(TargetFramework)/</IntermediateOutputPath>
+    <IntermediateOutputPath Condition="'$(TargetFramework)' != '' and '$(Configuration)' != ''">$(MSBuildProjectDirectory)/obj/$(Configuration)/$(TargetFramework)/</IntermediateOutputPath>
+    <RuntimeIdentifier Condition="'$(TargetFramework)' == '' or '$(TargetFramework)' == 'net6.0-windows' or '$(TargetFramework)' == 'net6-windows'">win-x64</RuntimeIdentifier>
     <SelfContained>false</SelfContained>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>

@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net6-windows</TargetFramework>
+    <TargetFrameworks>net6.0-windows;net6.0</TargetFrameworks>
     <OutputType>Library</OutputType>
     <IsPublishable>False</IsPublishable>
     <AssemblyTitle>Open Rails Common Library</AssemblyTitle>
@@ -13,6 +13,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <DocumentationFile>..\..\Program\Orts.Common.xml</DocumentationFile>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net6.0-windows'">
+    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
+    <OutputPath>$(MSBuildThisFileDirectory)..\..\Program\Portable\net6.0\</OutputPath>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="GNU.Gettext, Version=1.1.5151.39896, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -23,8 +29,18 @@
     <PackageReference Include="Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers" Version="0.4.355802">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="RailDriver" Version="0.7.10"/>
-    <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.1.303" />
-    <PackageReference Include="System.Management" Version="7.0.0" />
+    <PackageReference Include="RailDriver" Version="0.7.10" Condition="'$(TargetFramework)' == 'net6.0-windows'" />
+    <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.1.303" Condition="'$(TargetFramework)' == 'net6.0-windows'" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" Condition="'$(TargetFramework)' == 'net6.0'" />
+    <PackageReference Include="System.Management" Version="7.0.0" Condition="'$(TargetFramework)' == 'net6.0-windows'" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+    <Compile Remove="SystemInfo.cs" />
+    <Compile Remove="Input\RailDriverDevice.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0-windows'">
+    <Compile Remove="SystemInfo.Portable.cs" />
+    <Compile Remove="Input\RailDriverDevice.Portable.cs" />
+    <Compile Remove="SettingsStoreJson.Portable.cs" />
   </ItemGroup>
 </Project>

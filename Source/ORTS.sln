@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Launcher", "Launcher\Launch
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{2B0A170A-878A-4114-BB28-7306C713E185}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orts.Content.Tests", "Orts.Content.Tests\Orts.Content.Tests.csproj", "{A1408B46-86D8-4B6D-A502-2BD4D4AB2C49}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orts.Formats.Msts", "Orts.Formats.Msts\Orts.Formats.Msts.csproj", "{570709FA-0C8A-4B1D-BA2D-D9455AFD9B5C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orts.Parsers.Msts", "Orts.Parsers.Msts\Orts.Parsers.Msts.csproj", "{8A84696C-3559-49B8-B27F-BB6932D8A1C6}"
@@ -59,6 +61,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiPlayerServer", "MultiP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimetableEditor", "Contrib\TimetableEditor\TimetableEditor.csproj", "{C3CC640C-80F5-4A69-9467-7F17CC0C6B41}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orts.Android", "Orts.Android\Orts.Android.csproj", "{8C06468C-BD97-4820-B0CC-12F283ABBDCE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -81,6 +85,10 @@ Global
 		{2B0A170A-878A-4114-BB28-7306C713E185}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2B0A170A-878A-4114-BB28-7306C713E185}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2B0A170A-878A-4114-BB28-7306C713E185}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1408B46-86D8-4B6D-A502-2BD4D4AB2C49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1408B46-86D8-4B6D-A502-2BD4D4AB2C49}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1408B46-86D8-4B6D-A502-2BD4D4AB2C49}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1408B46-86D8-4B6D-A502-2BD4D4AB2C49}.Release|Any CPU.Build.0 = Release|Any CPU
 		{570709FA-0C8A-4B1D-BA2D-D9455AFD9B5C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{570709FA-0C8A-4B1D-BA2D-D9455AFD9B5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{570709FA-0C8A-4B1D-BA2D-D9455AFD9B5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -177,6 +185,10 @@ Global
 		{C3CC640C-80F5-4A69-9467-7F17CC0C6B41}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C3CC640C-80F5-4A69-9467-7F17CC0C6B41}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C3CC640C-80F5-4A69-9467-7F17CC0C6B41}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C06468C-BD97-4820-B0CC-12F283ABBDCE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C06468C-BD97-4820-B0CC-12F283ABBDCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C06468C-BD97-4820-B0CC-12F283ABBDCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C06468C-BD97-4820-B0CC-12F283ABBDCE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

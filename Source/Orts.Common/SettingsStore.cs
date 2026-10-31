@@ -22,6 +22,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text;
 using Microsoft.Win32;
 
@@ -162,17 +163,22 @@ namespace ORTS.Common
         /// <returns>The created SettingsStore</returns>
 		public static SettingsStore GetSettingStore(string filePath, string registryKey, string section)
 		{
+#if WINDOWS || NET6_0_WINDOWS
 			if (!String.IsNullOrEmpty(filePath) && File.Exists(filePath))
 				return new SettingsStoreLocalIni(filePath, section);
 			if (!String.IsNullOrEmpty(registryKey))
 				return new SettingsStoreRegistry(registryKey, section);
 			throw new ArgumentException("Neither 'filePath' nor 'registryKey' arguments are valid.");
+#else
+            return new SettingsStoreJson(filePath, registryKey, section);
+#endif
 		}
 	}
 
 	/// <summary>
     /// Registry implementation of <see cref="SettingsStore"/>.
 	/// </summary>
+    [SupportedOSPlatform("windows")]
 	public sealed class SettingsStoreRegistry : SettingsStore
 	{
 		readonly string RegistryKey;
